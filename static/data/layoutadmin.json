@@ -1,0 +1,24 @@
+{
+  "role":"admin",
+  "homePage":"/dashboard",
+  "menuItems":[
+    {
+      "icon": "mdi-account-group-outline",
+      "href": "/utilisateurs",
+      "title": "Utilisateurs",
+      "name": "gerer-utilisateurs"
+    },
+    {
+      "icon": "mdi-account-lock-outline",
+      "href": "/roles",
+      "title": "Rôles",
+      "name": "gerer-parametres"
+    },
+    {
+      "icon": "mdi-account-cancel-outline",
+      "href": "/permissions",
+      "title": "Permissions",
+      "name": "gerer-parametres"
+    }
+  ]
+ }

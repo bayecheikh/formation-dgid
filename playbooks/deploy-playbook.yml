@@ -1,0 +1,102 @@
+---
+- name: Deploy to server
+  hosts: "{{ host_node }}"
+  become: true
+  vars:
+    docker_username: "{{ DOCKER_USERNAME }}"
+    docker_password: "{{ DOCKER_PASSWORD }}"
+    container_name: "{{ CONTAINER_NAME }}"
+    container_port: "{{ CONTAINER_PORT }}"
+    container_image: "{{ IMAGETAG }}"
+  tasks:
+    - name: Install Docker SDK for Python
+      pip:
+        name: "docker<5"
+      become: yes
+
+    - name: Setup more docker dependencies
+      pip:
+        name: "websocket-client<1"
+      become: yes
+
+    - name: Log into DockerHub
+      docker_login:
+        username: "{{ docker_username }}"
+        password: "{{ docker_password }}"
+
+    - name: Pull the container docker image
+      community.docker.docker_image:
+        name: "{{ container_image }}"
+        source: pull
+
+    - name: Get infos on running container
+      docker_container_info:
+        name: "{{ container_name }}"
+      register: running_container
+
+    - name: Deploy container with new image
+      block: # <--- tasks to deploy the container
+        - name: Stop the running container
+          docker_container:
+            name: "{{ container_name }}"
+            state: stopped
+          #ignore_errors: yes
+          when: running_container.exists
+
+        - name: remove the existing container
+          docker_container:
+            name: "{{ container_name }}"
+            state: absent
+          #ignore_errors: yes
+          when: running_container.exists
+
+        - name: Remove  image
+          docker_image:
+            name: "{{ container_image }}"
+            state: absent
+
+        - name: Pull the container docker image
+          docker_image:
+            name: "{{ container_image }}"
+            source: pull
+
+        - name: Create container
+          docker_container:
+            name: "{{ container_name }}"
+            image: "{{ container_image }}"
+            state: started
+            restart_policy: on-failure
+            ports:
+              - "{{ container_port }}:80"
+
+      rescue: # <--- tasks for rolling back
+        - name: Remove  image
+          docker_image:
+            name: "{{ container_image }}"
+            state: absent
+
+        - name: Pull the container docker image
+          docker_image:
+            name: "{{ container_image }}"
+            source: pull
+
+        - name: Create old container for rolling back
+          docker_container:
+            name: "{{ container_name }}"
+            image: running_container.container.Image
+            state: started
+            restart_policy: on-failure
+            ports:
+              - "{{ container_port }}:80"
+          when: running_container.exists
+
+      always: # <--- finally task
+        - name: Clean up Docker images
+          docker_prune:
+            images: yes
+            images_filters:
+              dangling: false
+
+        - name: Log out of DockerHub
+          docker_login:
+            state: absent
