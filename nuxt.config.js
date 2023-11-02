@@ -19,7 +19,7 @@ export default {
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'description', name: 'description', content: '' },
+      { hid: 'description', name: 'description', content: 'Mon contenu' },
       { name: 'format-detection', content: 'telephone=no' }
     ],
     link: [
@@ -112,7 +112,7 @@ export default {
       light: true,
       themes: {
         light: {
-          primary: "#d79b06",//marron
+          primary: "#a76d2f",//marron
           secondary: "#000",//darkblue
           accent: colors.grey.darken3,
           secondary: colors.amber.darken3,
